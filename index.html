@@ -226,37 +226,6 @@ h2{color:var(--accent); text-align:center; margin:4px 0 14px; font-size:1.5rem;}
   text-align: center;
 }
 
-/* Tabela de classificação */
-.classificacao {
-  width: 100%;
-  margin-top: 20px;
-  background: #0d1630;
-  border-radius: 10px;
-  padding: 15px;
-}
-.classificacao h3 {
-  color: var(--accent);
-  text-align: center;
-  margin: 0 0 15px 0;
-  font-size: 1.2rem;
-}
-.classificacao table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.classificacao th, .classificacao td {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-.classificacao th {
-  color: var(--accent);
-  font-weight: bold;
-}
-.classificacao tr:last-child td {
-  border-bottom: none;
-}
-
 /* Estatísticas */
 .stats-tabs {
   display: flex;
@@ -459,23 +428,6 @@ h2{color:var(--accent); text-align:center; margin:4px 0 14px; font-size:1.5rem;}
           <div class="timer-controls">
             <button id="btnStartPause">Iniciar</button>
             <button id="btnFinish" disabled>Finalizar</button>
-          </div>
-          
-          <!-- Tabela de classificação -->
-          <div class="classificacao">
-            <h3>Classificação do Dia</h3>
-            <table id="tabelaClassificacao">
-              <thead>
-                <tr>
-                  <th>Pos</th>
-                  <th>Time</th>
-                  <th>Pontos</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Será preenchido dinamicamente -->
-              </tbody>
-            </table>
           </div>
         </div>
         
@@ -723,7 +675,6 @@ function loadGames() {
       const data = snapshot.val();
       if (data) {
         unidosGames = data;
-        updateClassificacao();
         renderStats();
       }
     })
@@ -806,7 +757,6 @@ tabJogo.addEventListener('click', ()=>{
   secJogo.classList.remove('hidden'); 
   clearActiveNav(); 
   tabJogo.classList.add('active'); 
-  updateClassificacao(); 
 });
 
 tabStats.addEventListener('click', ()=>{ 
@@ -1068,9 +1018,6 @@ function endAndSaveMatch(){
   currentMatch = { date:null, teamA:'', teamB:'', placarA:0, placarB:0, gols:[], faltas:[], resultado:null };
   lastLanceAlertShown = false;
   
-  // Update classification table
-  updateClassificacao();
-  
   // Update stats
   renderStats();
 }
@@ -1246,81 +1193,6 @@ plusGoalA.addEventListener('click', ()=> addGoalToTeam('A'));
 plusGoalB.addEventListener('click', ()=> addGoalToTeam('B'));
 minusGoalA.addEventListener('click', ()=> removeLastGoalFromTeam('A'));
 minusGoalB.addEventListener('click', ()=> removeLastGoalFromTeam('B'));
-
-/* ==================== CLASSIFICAÇÃO ==================== */
-function updateClassificacao() {
-  const today = todayDate();
-  const jogosHoje = unidosGames.filter(g => g.date === today);
-  
-  // Initialize stats for all teams
-  const teamStats = {};
-  
-  // Process each game
-  jogosHoje.forEach(j => {
-    const teamA = j.teamA;
-    const teamB = j.teamB;
-    const placarA = j.placarA || 0;
-    const placarB = j.placarB || 0;
-    
-    // Initialize teams if not present
-    if (!teamStats[teamA]) {
-      teamStats[teamA] = { pontos: 0 };
-    }
-    if (!teamStats[teamB]) {
-      teamStats[teamB] = { pontos: 0 };
-    }
-    
-    // Update points based on result
-    if (placarA > placarB) {
-      teamStats[teamA].pontos += 3;
-    } else if (placarB > placarA) {
-      teamStats[teamB].pontos += 3;
-    } else {
-      teamStats[teamA].pontos += 1;
-      teamStats[teamB].pontos += 1;
-    }
-  });
-  
-  // Convert to array and sort by points (descending)
-  const classificacao = Object.entries(teamStats)
-    .map(([team, stats]) => ({ team, pontos: stats.pontos }))
-    .sort((a, b) => b.pontos - a.pontos);
-  
-  // Update UI
-  const tbody = tabelaClassificacao.querySelector('tbody');
-  tbody.innerHTML = '';
-  
-  if (classificacao.length === 0) {
-    const row = document.createElement('tr');
-    const cell = document.createElement('td');
-    cell.colSpan = 3;
-    cell.textContent = 'Nenhuma partida finalizada hoje';
-    cell.style.textAlign = 'center';
-    cell.style.color = '#9fb7d9';
-    row.appendChild(cell);
-    tbody.appendChild(row);
-    return;
-  }
-  
-  classificacao.forEach((item, index) => {
-    const row = document.createElement('tr');
-    
-    const posCell = document.createElement('td');
-    posCell.textContent = index + 1;
-    
-    const teamCell = document.createElement('td');
-    teamCell.textContent = item.team;
-    
-    const pontosCell = document.createElement('td');
-    pontosCell.textContent = item.pontos;
-    
-    row.appendChild(posCell);
-    row.appendChild(teamCell);
-    row.appendChild(pontosCell);
-    
-    tbody.appendChild(row);
-  });
-}
 /* ==================== ESTATÍSTICAS ==================== */
 // Event listeners para as abas de estatísticas
 tabClassificacao.addEventListener('click', () => {
